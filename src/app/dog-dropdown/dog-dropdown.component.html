@@ -1,19 +1,21 @@
-<p>{{ selectedDog }}</p>
-
-<h4>Psintagram</h4>
-<mat-form-field appearance="fill">
-  <mat-label>Dog Breed</mat-label>
-  <mat-select (selectionChange)="onSelectedDog($event)">
-    <mat-option *ngFor="let dog of dogList" [value]="dog">
-      {{ dog }}
-    </mat-option>
-  </mat-select>
-</mat-form-field>
-
-<img mat-card-image [src]="dogImageUrl" alt="Photo of a Dog" />
-<!-- <img
-  *ngIf="selectedDog"
-  mat-card-image
-  [src]="getDynamicDogImage(selectedDog) | async"
-  alt="Photo of a Dog"
-/> -->
+<mat-card class="dog-card">
+  <mat-card-header>
+    <mat-card-title>{{selectedDog  | async  | titlecase}}</mat-card-title>
+  </mat-card-header>
+  <img mat-card-image [src]="selectedDogImage" alt="Photo of a Dog">
+  <mat-card-content>
+    <mat-form-field appearance="fill">
+      <mat-label>Dog Breed</mat-label>
+      <mat-select (selectionChange)="onSelectedDog($event)">
+        <mat-option *ngFor="let dog of dogList" [value]="dog">
+          {{ dog }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-card-content>
+  <mat-card-actions>
+    <button (click)="onNavigate()" mat-button>
+      Go to Wiki
+    </button>
+  </mat-card-actions>
+</mat-card>

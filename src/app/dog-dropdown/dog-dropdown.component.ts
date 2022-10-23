@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { DogRestService } from '../dog-rest.service';
-import { Observable } from 'rxjs';
+import { Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { DogService } from "../dog.service";
 
 @Component({
   selector: 'app-dog-dropdown',
@@ -8,28 +8,45 @@ import { Observable } from 'rxjs';
   styleUrls: ['./dog-dropdown.component.scss'],
 })
 export class DogDropdownComponent implements OnInit {
-  dogList: any;
-  dogImageUrl: any;
-  selectedDog: any;
+  dogList: string[] = [];
+  selectedDog = this.dogService.selectedDog$;
+  selectedDogImage: string = '';
+  selectedDogWikiPageUrl: string = '';
+  destroySub$ = new Subject<void>();
 
-  constructor(private dogRestService: DogRestService) {}
+  constructor(private dogService: DogService) {
+  }
 
   ngOnInit(): void {
-    this.dogRestService.getDogs().subscribe(({ message }) => {
+    this.setDogList();
+
+    this.dogService.selectedDog$.pipe(
+      takeUntil(this.destroySub$),
+      tap((breed) => {
+        this.selectedDogWikiPageUrl = `http://en.wikipedia.org/wiki/${breed}`
+      }),
+      switchMap((breed) =>
+        this.dogService.getImages(breed)
+      )
+    ).subscribe((image => {
+      this.selectedDogImage = image
+    }))
+
+  }
+
+  onSelectedDog(event: any): void {
+    this.dogService.setSelectedDog(event.value);
+  }
+
+  private setDogList(): void {
+    this.dogService.getDogs().pipe(
+      takeUntil(this.destroySub$)
+    ).subscribe(({message}) => {
       this.dogList = Object.keys(message);
     });
-
-    this.dogRestService.getImages('boxer').subscribe((image) => {
-      this.dogImageUrl = image;
-    });
   }
 
-  getDynamicDogImage(breedName: string): Observable<any> {
-    console.log(breedName);
-    return this.dogRestService.getImages(breedName);
-  }
-
-  onSelectedDog(event: any) {
-    this.selectedDog = event.value;
+  onNavigate(): void {
+    window.open(this.selectedDogWikiPageUrl, "_blank");
   }
 }
